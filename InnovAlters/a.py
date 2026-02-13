@@ -9,68 +9,101 @@ from sklearn.preprocessing import StandardScaler
 # =========================================================
 # CONFIG
 # =========================================================
-st.set_page_config(page_title="PulseGuard AI", layout="wide")
+st.set_page_config(
+    page_title="PulseGuard AI",
+    page_icon="🩺",
+    layout="wide"
+)
 
-DATA_PATH = "C:\pavan\health_data.csv"
+DATA_PATH = "health_data.csv"  # Keep CSV in same folder
 
 # =========================================================
-# PROFESSIONAL MEDICAL UI
+# PREMIUM STYLISH MEDICAL UI
 # =========================================================
 st.markdown("""
 <style>
-.stApp { background-color: #F4F7FB; }
-.block-container { padding: 2rem 3rem; }
 
-.app-header {
-    font-size: 36px;
-    font-weight: 700;
-    color: #0D47A1;
-    margin-bottom: 5px;
-}
-
-.app-sub {
-    font-size: 16px;
-    color: #6B7280;
-    margin-bottom: 30px;
-}
-
-.card {
-    background: #FFFFFF;
-    padding: 30px;
-    border-radius: 14px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-    margin-bottom: 20px;
-}
-
-.result-box {
-    background: #FFFFFF;
-    padding: 45px;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    margin-top: 30px;
-}
-
-.stButton>button {
-    background-color: #0D47A1;
+/* GLOBAL */
+.stApp {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     color: white;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.block-container {
+    padding: 2rem 4rem;
+}
+
+/* HEADER */
+.app-header {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #FFA500, #FF6A00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color:blue;
+}
+
+/* GLASS CARD */
+.card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ================= ORANGE INPUT FIELDS ================= */
+
+/* Number input + Selectbox container */
+div[data-testid="stNumberInput"] input,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    background-color: white !important;
+    color:black !important;
+    border-radius: 10px !important;
+    border: 2px solid #FFA500 !important;
+}
+
+/* Dropdown menu background */
+div[role="listbox"] {
+    background-color: #FF8C00 !important;
+    color:white !important;
+}
+
+/* Input labels */
+label {
+    color: #FFA500 !important;
     font-weight: 600;
-    border-radius: 8px;
-    height: 3em;
-    width: 100%;
+}
+
+/* Focus effect */
+input:focus {
+    border: 2px solid #FFD580 !important;
+    box-shadow: 0 0 10px #FFA500 !important;
+}
+
+/* BUTTON */
+.stButton>button {
+    background: linear-gradient(90deg, #FFA500, #FF6A00);
+    color: white;
+    font-weight: 700;
+    border-radius: 12px;
+    height: 3.2em;
     border: none;
+    transition: 0.3s;
 }
 
 .stButton>button:hover {
-    background-color: #08306B;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #FFA500;
 }
+            h1
+            {
+            color:blue;}
 
-div[data-testid="stNumberInput"],
-div[data-testid="stSelectbox"] {
-    margin-bottom: 15px;
-}
 </style>
 """, unsafe_allow_html=True)
+
 
 # =========================================================
 # SESSION STATE
@@ -82,20 +115,15 @@ if "users" not in st.session_state:
     st.session_state.users = {"admin": "pulse123"}
 
 # =========================================================
-# TRAIN MODEL SAFELY
+# MODEL TRAINING
 # =========================================================
 @st.cache_resource
 def train_model():
-
     if not os.path.exists(DATA_PATH):
-        st.error("❌ cardio_train.csv not found in project folder.")
+        st.error("❌ health_data.csv not found in project folder.")
         return None, None
 
-    # Load dataset safely
-    df = pd.read_csv(DATA_PATH, sep=";")
-    if len(df.columns) == 1:
-        df = pd.read_csv(DATA_PATH, sep=",")
-
+    df = pd.read_csv(DATA_PATH)
     df.columns = df.columns.str.strip()
 
     required_cols = [
@@ -107,14 +135,11 @@ def train_model():
     for col in required_cols:
         if col not in df.columns:
             st.error(f"❌ Missing column: {col}")
-            st.write("Available columns:", df.columns.tolist())
             return None, None
 
-    # Convert age from days to years
     if df["age"].max() > 200:
         df["age"] = df["age"] / 365
 
-    # Clean unrealistic BP values
     df = df[(df["ap_hi"] > 70) & (df["ap_hi"] < 250)]
     df = df[(df["ap_lo"] > 40) & (df["ap_lo"] < 150)]
 
@@ -146,7 +171,7 @@ def train_model():
 model, scaler = train_model()
 
 # =========================================================
-# HYBRID REAL-WORLD LOGIC
+# HYBRID MEDICAL LOGIC
 # =========================================================
 def hybrid_adjustment(age, bmi, smoke, chol, gluc, alco, active):
 
@@ -155,9 +180,9 @@ def hybrid_adjustment(age, bmi, smoke, chol, gluc, alco, active):
 
     if smoke:
         systolic += 8; diastolic += 5
-    if chol > 0:
+    if chol:
         systolic += 5
-    if gluc > 0:
+    if gluc:
         systolic += 5
     if alco:
         systolic += 5
@@ -170,9 +195,8 @@ def hybrid_adjustment(age, bmi, smoke, chol, gluc, alco, active):
 # LOGIN PAGE
 # =========================================================
 def login():
-
-    st.markdown("<div class='app-header'>PulseGuard AI</div>", unsafe_allow_html=True)
-    st.markdown("<div class='app-sub'>Clinical Blood Pressure Estimation System</div>", unsafe_allow_html=True)
+    st.markdown("<div class='app-header'>🩺 PulseGuard AI</div>", unsafe_allow_html=True)
+    st.markdown("<div class='app-sub'>AI Clinical Blood Pressure Intelligence</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
 
@@ -197,8 +221,14 @@ def predict():
     if model is None:
         return
 
-    st.markdown("<div class='app-header'>Blood Pressure Prediction</div>", unsafe_allow_html=True)
-    st.markdown("<div class='app-sub'>Enter patient clinical parameters</div>", unsafe_allow_html=True)
+    st.markdown("<div class='app-header'>🩺 PulseGuard AI</div>", unsafe_allow_html=True)
+    st.markdown("<div class='app-sub'>AI-Powered Clinical Blood Pressure Estimation</div>", unsafe_allow_html=True)
+
+    # Dashboard Metrics
+    m1, m2, m3 = st.columns(3)
+    m1.metric("System Status", "Active 🟢")
+    m2.metric("Model Type", "Random Forest")
+    m3.metric("Prediction Engine", "Hybrid AI")
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
 
@@ -239,8 +269,8 @@ def predict():
         adj_sys, adj_dia = hybrid_adjustment(
             age, bmi,
             smoke=="Yes",
-            1 if chol!="Normal" else 0,
-            1 if gluc!="Normal" else 0,
+            chol!="Normal",
+            gluc!="Normal",
             alco=="Yes",
             active=="Yes"
         )
@@ -248,25 +278,28 @@ def predict():
         systolic = round((ml_pred[0][0] + adj_sys)/2)
         diastolic = round((ml_pred[0][1] + adj_dia)/2)
 
-        # Category
         if systolic >= 140 or diastolic >= 90:
-            color = "#C62828"
+            color = "#ff4b5c"
             status = "HIGH BLOOD PRESSURE"
         elif systolic < 90 or diastolic < 60:
-            color = "#1565C0"
+            color = "#4dabf7"
             status = "LOW BLOOD PRESSURE"
         else:
-            color = "#2E7D32"
+            color = "#51cf66"
             status = "NORMAL BLOOD PRESSURE"
 
         st.markdown(f"""
-        <div class="result-box" style="border-top:6px solid {color};">
+        <div class="result-box" style="border-top:8px solid {color};">
             <h2>Predicted Blood Pressure</h2>
-            <h1 style="color:{color}; font-size:48px;">{systolic} / {diastolic} mmHg</h1>
+            <h1 style="font-size:60px; color:{color};">
+                {systolic} / {diastolic} mmHg
+            </h1>
             <h3 style="color:{color};">{status}</h3>
-            <p style="color:#6B7280;">BMI: {round(bmi,1)}</p>
+            <p>BMI: {round(bmi,1)}</p>
         </div>
         """, unsafe_allow_html=True)
+
+    st.caption("⚠ This AI system provides predictive estimates and does not replace professional medical diagnosis.")
 
 # =========================================================
 # MAIN FLOW
